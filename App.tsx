@@ -54,23 +54,25 @@ const App: React.FC = () => {
 
       // Header
       doc.setFontSize(18);
-      doc.setTextColor(15, 23, 42); // slate-900
+      doc.setTextColor(15, 23, 42); 
       doc.setFont('Helvetica', 'bold');
       doc.text('Vibration Check Report', pageWidth / 2, y, { align: 'center' });
       y += 10;
       doc.setFontSize(10);
       doc.setFont('Helvetica', 'normal');
-      doc.setTextColor(100, 116, 139); // slate-500
+      doc.setTextColor(100, 116, 139);
       doc.text('AISC Design Guide 11 - Dynamic Peak Acceleration Analysis', pageWidth / 2, y, { align: 'center' });
       y += 15;
 
-      // Project Info
+      // Project Info Box
+      doc.setDrawColor(226, 232, 240);
+      doc.setFillColor(248, 250, 252);
+      doc.rect(margin, y - 5, contentWidth, 20, 'F');
       doc.setFontSize(11);
       doc.setTextColor(15, 23, 42);
-      doc.text(`Date: ${new Date().toLocaleDateString()}`, margin, y);
-      y += 7;
-      doc.text(`Engineer: Eng. Raed Saad Eldin Mohamed`, margin, y);
-      y += 15;
+      doc.text(`Date: ${new Date().toLocaleDateString()}`, margin + 5, y + 2);
+      doc.text(`Engineer: Eng. Raed Saad Eldin Mohamed`, margin + 5, y + 10);
+      y += 25;
 
       // 1. Input Section
       doc.setFontSize(12);
@@ -92,7 +94,7 @@ const App: React.FC = () => {
       
       inputData.forEach(([label, value]) => {
         doc.text(label, margin + 5, y);
-        doc.text(value, 100, y);
+        doc.text(value, margin + 80, y);
         y += 6;
       });
       y += 10;
@@ -106,12 +108,12 @@ const App: React.FC = () => {
       doc.setFontSize(10);
       doc.setFont('Helvetica', 'normal');
       doc.text('Low-Frequency Response:', margin + 5, y);
-      doc.text(`${results.lowFreq.peakAcceleration.toFixed(4)} %g`, 100, y);
-      doc.text(`(Limit: ${results.lowFreq.limit.toFixed(3)} %g)`, 140, y);
+      doc.text(`${results.lowFreq.peakAcceleration.toFixed(4)} %g`, margin + 80, y);
+      doc.text(`(Limit: ${results.lowFreq.limit.toFixed(3)} %g)`, margin + 120, y);
       y += 6;
       doc.text('High-Frequency Response:', margin + 5, y);
-      doc.text(`${results.highFreq.peakAcceleration.toFixed(4)} %g`, 100, y);
-      doc.text(`(Limit: ${results.highFreq.limit.toFixed(3)} %g)`, 140, y);
+      doc.text(`${results.highFreq.peakAcceleration.toFixed(4)} %g`, margin + 80, y);
+      doc.text(`(Limit: ${results.highFreq.limit.toFixed(3)} %g)`, margin + 120, y);
       y += 12;
 
       // Overall Acceptability
@@ -119,9 +121,9 @@ const App: React.FC = () => {
       doc.setFontSize(14);
       doc.setFont('Helvetica', 'bold');
       if (isOk) {
-        doc.setTextColor(16, 185, 129); // emerald-500
+        doc.setTextColor(16, 185, 129);
       } else {
-        doc.setTextColor(239, 68, 68); // rose-500
+        doc.setTextColor(239, 68, 68);
       }
       doc.text(`OVERALL STATUS: ${isOk ? 'PASS' : 'FAIL'}`, pageWidth / 2, y, { align: 'center' });
       doc.setTextColor(15, 23, 42);
@@ -133,8 +135,7 @@ const App: React.FC = () => {
       const imgWidth = contentWidth;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
-      // If chart doesn't fit on page 1, push to page 2
-      if (y + imgHeight > pageHeight - 30) {
+      if (y + imgHeight > pageHeight - 40) {
         doc.addPage();
         y = 20;
       }
@@ -143,24 +144,21 @@ const App: React.FC = () => {
       y += imgHeight + 20;
 
       // 3. Methodology Section
-      if (y > pageHeight - 60) {
+      if (y > pageHeight - 80) {
         doc.addPage();
         y = 20;
       }
 
-      // Separator Line
-      doc.setDrawColor(226, 232, 240); // slate-200
-      doc.line(margin, y - 5, pageWidth - margin, y - 5);
-
+      doc.setFillColor(241, 245, 249);
+      doc.rect(margin, y - 6, contentWidth, 10, 'F');
       doc.setFontSize(12);
       doc.setFont('Helvetica', 'bold');
       doc.setTextColor(15, 23, 42);
-      doc.text('3. Calculation Methodology', margin, y);
-      y += 10;
+      doc.text('3. Calculation Methodology', margin + 5, y + 1);
+      y += 15;
       
       doc.setFontSize(10);
-      doc.setFont('Helvetica', 'normal');
-      doc.setTextColor(51, 65, 85); // slate-700
+      doc.setTextColor(51, 65, 85);
       
       const methodologySections = [
         {
@@ -168,47 +166,50 @@ const App: React.FC = () => {
           body: "Analysis follows AISC Steel Design Guide 11, Chapter 7 (FEA Method). Comfort thresholds are based on ISO 2631-2 baseline curves (AISC Guide 11 Figure 2-1)."
         },
         {
-          title: "Low Frequency Response (fn ≤ 9 Hz):",
-          body: "Uses a resonant model for walking. Formula: ap = FRF_Max * alpha * Q * rho. It accounts for dynamic coefficients (alpha), step weight (Q), and resonance factors (rho)."
+          title: "Low Frequency Response (fn <= 9 Hz):",
+          body: "Uses a resonant model for walking activity. Formula: ap = FRF_Max * alpha * Q * rho. This incorporates the dynamic coefficient (alpha), step weight (Q), and resonance factor (rho) for damping correction."
         },
         {
           title: "High Frequency Response (fn > 9 Hz):",
-          body: "Uses Effective Peak Acceleration (ESPA). This determines the floor's sensitivity to repetitive impulsive loading from footsteps rather than steady-state resonance."
+          body: "Uses the Effective Peak Acceleration (ESPA) strategy. This determines the floor's peak transient response to individual impulses that occur during repetitive human motion."
         },
         {
           title: "Limit Computation:",
-          body: "Limits are frequency-dependent. The baseline acceleration (0.005g at 4-8Hz) is interpolated log-linearly across the frequency spectrum and scaled by multipliers (e.g., M=10 for Offices, M=30 for Malls)."
+          body: "Thresholds are frequency-dependent. The baseline acceleration (0.005g at 4-8Hz) is interpolated log-linearly across the spectrum and scaled by occupancy-specific multipliers (M=10 for Offices, M=30 for Shopping Malls)."
         }
       ];
 
       methodologySections.forEach(section => {
-        if (y > pageHeight - 30) {
+        const bodyLines = doc.splitTextToSize(section.body, contentWidth - 10);
+        const blockHeight = 6 + (bodyLines.length * 5) + 6;
+
+        if (y + blockHeight > pageHeight - 15) {
           doc.addPage();
           y = 20;
         }
 
         doc.setFont('Helvetica', 'bold');
-        doc.text(section.title, margin, y);
+        doc.text(section.title, margin + 5, y);
         y += 6;
 
         doc.setFont('Helvetica', 'normal');
-        const lines = doc.splitTextToSize(section.body, contentWidth - 5);
-        lines.forEach((line: string) => {
-          if (y > pageHeight - 15) {
-            doc.addPage();
-            y = 20;
-          }
-          doc.text(line, margin + 5, y);
+        bodyLines.forEach((line: string) => {
+          doc.text(line, margin + 10, y);
           y += 5;
         });
-        y += 4; // space between sections
+        y += 6; // space between sections
       });
 
-      // Footer - added to every page in a real app, but here just at the end
-      doc.setFontSize(8);
-      doc.setFont('Helvetica', 'normal');
-      doc.setTextColor(148, 163, 184);
-      doc.text('© 2026 Eng. Raed Saad Eldin Mohamed – Structural Design Engineer. All rights reserved.', pageWidth / 2, pageHeight - 10, { align: 'center' });
+      // Footer
+      const totalPages = doc.internal.pages.length - 1;
+      for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setFont('Helvetica', 'normal');
+        doc.setTextColor(148, 163, 184);
+        doc.text('© 2026 Eng. Raed Saad Eldin Mohamed – Structural Design Engineer. All rights reserved.', pageWidth / 2, pageHeight - 10, { align: 'center' });
+        doc.text(`Page ${i} of ${totalPages}`, pageWidth - margin, pageHeight - 10, { align: 'right' });
+      }
 
       doc.save(`Vibration_Report_${inputs.checkType.replace(/\s+/g, '_')}.pdf`);
     } catch (error) {
