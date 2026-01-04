@@ -298,7 +298,7 @@ const App: React.FC = () => {
 
               <div className="space-y-4 pt-4 border-t border-slate-100">
                 <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                  <Waves className="w-4 h-4" /> Low Frequency (fn ≤ 9 Hz)
+                  <Waves className="w-4 h-4" /> Low Frequency (fn &le; 9 Hz)
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -430,13 +430,13 @@ const App: React.FC = () => {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm text-slate-600 leading-relaxed">
               <div>
-                <h4 className="font-bold text-slate-900 mb-2">Low Frequency Floors (fn ≤ 9 Hz)</h4>
+                <h4 className="font-bold text-slate-900 mb-2">Low Frequency Floors (fn &le; 9 Hz)</h4>
                 <p>
-                  For floors where the natural frequency is within the first few harmonics of walking (typically ≤ 9 Hz), the response is dominated by resonance. The peak acceleration is calculated using the established AISC Guide 11 Chapter 7 FEA-based formula <strong>ap = FRF_Max * α * Q * ρ</strong>.
+                  For floors where the natural frequency is within the first few harmonics of walking (typically &le; 9 Hz), the response is dominated by resonance. The peak acceleration is calculated using the established AISC Guide 11 Chapter 7 FEA-based formula <strong>ap = FRF_Max * α * Q * ρ</strong>.
                 </p>
               </div>
               <div>
-                <h4 className="font-bold text-slate-900 mb-2">High Frequency Floors (fn > 9 Hz)</h4>
+                <h4 className="font-bold text-slate-900 mb-2">High Frequency Floors (fn &gt; 9 Hz)</h4>
                 <p>
                   Floors with higher stiffness and frequency are sensitive to individual impulses. The response is calculated using an Effective Peak Acceleration (ESPA) strategy adapted for repetitive loading.
                 </p>
