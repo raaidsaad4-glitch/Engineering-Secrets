@@ -48,14 +48,18 @@ const App: React.FC = () => {
       const doc = new jsPDF('p', 'mm', 'a4');
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 20;
+      const contentWidth = pageWidth - (margin * 2);
       let y = 20;
 
       // Header
       doc.setFontSize(18);
       doc.setTextColor(15, 23, 42); // slate-900
+      doc.setFont('Helvetica', 'bold');
       doc.text('Vibration Check Report', pageWidth / 2, y, { align: 'center' });
       y += 10;
       doc.setFontSize(10);
+      doc.setFont('Helvetica', 'normal');
       doc.setTextColor(100, 116, 139); // slate-500
       doc.text('AISC Design Guide 11 - Dynamic Peak Acceleration Analysis', pageWidth / 2, y, { align: 'center' });
       y += 15;
@@ -63,15 +67,15 @@ const App: React.FC = () => {
       // Project Info
       doc.setFontSize(11);
       doc.setTextColor(15, 23, 42);
-      doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, y);
+      doc.text(`Date: ${new Date().toLocaleDateString()}`, margin, y);
       y += 7;
-      doc.text(`Engineer: Eng. Raed Saad Eldin Mohamed`, 20, y);
+      doc.text(`Engineer: Eng. Raed Saad Eldin Mohamed`, margin, y);
       y += 15;
 
       // 1. Input Section
       doc.setFontSize(12);
       doc.setFont('Helvetica', 'bold');
-      doc.text('1. Input Parameters', 20, y);
+      doc.text('1. Input Parameters', margin, y);
       y += 8;
       doc.setFontSize(10);
       doc.setFont('Helvetica', 'normal');
@@ -87,7 +91,7 @@ const App: React.FC = () => {
       ];
       
       inputData.forEach(([label, value]) => {
-        doc.text(label, 25, y);
+        doc.text(label, margin + 5, y);
         doc.text(value, 100, y);
         y += 6;
       });
@@ -96,16 +100,16 @@ const App: React.FC = () => {
       // 2. Results Section
       doc.setFontSize(12);
       doc.setFont('Helvetica', 'bold');
-      doc.text('2. Analysis Results', 20, y);
+      doc.text('2. Analysis Results', margin, y);
       y += 8;
       
       doc.setFontSize(10);
       doc.setFont('Helvetica', 'normal');
-      doc.text('Low-Frequency Response:', 25, y);
+      doc.text('Low-Frequency Response:', margin + 5, y);
       doc.text(`${results.lowFreq.peakAcceleration.toFixed(4)} %g`, 100, y);
       doc.text(`(Limit: ${results.lowFreq.limit.toFixed(3)} %g)`, 140, y);
       y += 6;
-      doc.text('High-Frequency Response:', 25, y);
+      doc.text('High-Frequency Response:', margin + 5, y);
       doc.text(`${results.highFreq.peakAcceleration.toFixed(4)} %g`, 100, y);
       doc.text(`(Limit: ${results.highFreq.limit.toFixed(3)} %g)`, 140, y);
       y += 12;
@@ -126,69 +130,81 @@ const App: React.FC = () => {
       // Capture Chart
       const canvas = await html2canvas(chartRef.current, { scale: 2 });
       const imgData = canvas.toDataURL('image/png');
-      const imgWidth = 170;
+      const imgWidth = contentWidth;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
       // If chart doesn't fit on page 1, push to page 2
-      if (y + imgHeight > pageHeight - 20) {
+      if (y + imgHeight > pageHeight - 30) {
         doc.addPage();
         y = 20;
       }
       
-      doc.addImage(imgData, 'PNG', 20, y, imgWidth, imgHeight);
-      y += imgHeight + 15;
+      doc.addImage(imgData, 'PNG', margin, y, imgWidth, imgHeight);
+      y += imgHeight + 20;
 
       // 3. Methodology Section
-      // Ensure methodology has enough space or starts on a new page
       if (y > pageHeight - 60) {
         doc.addPage();
         y = 20;
       }
 
+      // Separator Line
+      doc.setDrawColor(226, 232, 240); // slate-200
+      doc.line(margin, y - 5, pageWidth - margin, y - 5);
+
       doc.setFontSize(12);
       doc.setFont('Helvetica', 'bold');
       doc.setTextColor(15, 23, 42);
-      doc.text('3. Calculation Methodology', 20, y);
-      y += 8;
+      doc.text('3. Calculation Methodology', margin, y);
+      y += 10;
       
-      doc.setFontSize(9);
+      doc.setFontSize(10);
       doc.setFont('Helvetica', 'normal');
       doc.setTextColor(51, 65, 85); // slate-700
       
-      const methodology = [
-        "Analysis follows the AISC Steel Design Guide 11, Chapter 7 (FEA Method) criteria.",
-        "",
-        "Low Frequency Response (fn ≤ 9 Hz):",
-        "Calculated using a resonant response model assuming dynamic buildup from walking activity.",
-        "Equation: ap = FRF_Max * alpha * Q * rho",
-        "Where 'alpha' is the dynamic coefficient, 'Q' is the step weight, and 'rho' is the resonance",
-        "reduction factor based on damping.",
-        "",
-        "High Frequency Response (fn > 9 Hz):",
-        "Determined via an Effective Peak Acceleration (ESPA) approximation for impulsive loading.",
-        "Response is scaled by effective impulses that occur as individuals walk or run.",
-        "",
-        "Human Comfort Limits:",
-        "Based on ISO 2631-2 baseline curves (AISC Guide 11 Figure 2-1).",
-        "Thresholds are calculated via log-linear interpolation of standardized baseline curves",
-        "multiplied by occupancy-specific multipliers (e.g., M=10 for Offices, M=30 for Malls)."
+      const methodologySections = [
+        {
+          title: "Regulatory Basis:",
+          body: "Analysis follows AISC Steel Design Guide 11, Chapter 7 (FEA Method). Comfort thresholds are based on ISO 2631-2 baseline curves (AISC Guide 11 Figure 2-1)."
+        },
+        {
+          title: "Low Frequency Response (fn ≤ 9 Hz):",
+          body: "Uses a resonant model for walking. Formula: ap = FRF_Max * alpha * Q * rho. It accounts for dynamic coefficients (alpha), step weight (Q), and resonance factors (rho)."
+        },
+        {
+          title: "High Frequency Response (fn > 9 Hz):",
+          body: "Uses Effective Peak Acceleration (ESPA). This determines the floor's sensitivity to repetitive impulsive loading from footsteps rather than steady-state resonance."
+        },
+        {
+          title: "Limit Computation:",
+          body: "Limits are frequency-dependent. The baseline acceleration (0.005g at 4-8Hz) is interpolated log-linearly across the frequency spectrum and scaled by multipliers (e.g., M=10 for Offices, M=30 for Malls)."
+        }
       ];
 
-      methodology.forEach(line => {
-        if (y > pageHeight - 15) {
+      methodologySections.forEach(section => {
+        if (y > pageHeight - 30) {
           doc.addPage();
           y = 20;
         }
-        if (line.includes(':')) {
-           doc.setFont('Helvetica', 'bold');
-        } else {
-           doc.setFont('Helvetica', 'normal');
-        }
-        doc.text(line, 20, y);
-        y += line === "" ? 3 : 5;
+
+        doc.setFont('Helvetica', 'bold');
+        doc.text(section.title, margin, y);
+        y += 6;
+
+        doc.setFont('Helvetica', 'normal');
+        const lines = doc.splitTextToSize(section.body, contentWidth - 5);
+        lines.forEach((line: string) => {
+          if (y > pageHeight - 15) {
+            doc.addPage();
+            y = 20;
+          }
+          doc.text(line, margin + 5, y);
+          y += 5;
+        });
+        y += 4; // space between sections
       });
 
-      // Footer
+      // Footer - added to every page in a real app, but here just at the end
       doc.setFontSize(8);
       doc.setFont('Helvetica', 'normal');
       doc.setTextColor(148, 163, 184);
