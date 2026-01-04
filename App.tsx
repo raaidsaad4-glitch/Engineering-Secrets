@@ -64,7 +64,7 @@ const App: React.FC = () => {
       doc.text('AISC Design Guide 11 - Dynamic Peak Acceleration Analysis', pageWidth / 2, y, { align: 'center' });
       y += 15;
 
-      // Project Info Box
+      // Engineer Info
       doc.setDrawColor(226, 232, 240);
       doc.setFillColor(248, 250, 252);
       doc.rect(margin, y - 5, contentWidth, 20, 'F');
@@ -129,7 +129,7 @@ const App: React.FC = () => {
       doc.setTextColor(15, 23, 42);
       y += 12;
 
-      // Capture Chart
+      // Chart
       const canvas = await html2canvas(chartRef.current, { scale: 2 });
       const imgData = canvas.toDataURL('image/png');
       const imgWidth = contentWidth;
@@ -143,64 +143,69 @@ const App: React.FC = () => {
       doc.addImage(imgData, 'PNG', margin, y, imgWidth, imgHeight);
       y += imgHeight + 20;
 
-      // 3. Methodology Section
-      if (y > pageHeight - 80) {
+      // 3. Methodology Section (REVISED for full visibility)
+      if (y > pageHeight - 60) {
         doc.addPage();
         y = 20;
       }
 
+      // Title header with background
       doc.setFillColor(241, 245, 249);
       doc.rect(margin, y - 6, contentWidth, 10, 'F');
       doc.setFontSize(12);
       doc.setFont('Helvetica', 'bold');
       doc.setTextColor(15, 23, 42);
-      doc.text('3. Calculation Methodology', margin + 5, y + 1);
-      y += 15;
+      doc.text('3. Calculation Methodology & Reference', margin + 5, y + 1);
+      y += 12;
       
       doc.setFontSize(10);
       doc.setTextColor(51, 65, 85);
       
       const methodologySections = [
         {
-          title: "Regulatory Basis:",
-          body: "Analysis follows AISC Steel Design Guide 11, Chapter 7 (FEA Method). Comfort thresholds are based on ISO 2631-2 baseline curves (AISC Guide 11 Figure 2-1)."
+          title: "Regulatory Standards:",
+          body: "Calculations are based on the AISC Steel Design Guide 11, Chapter 7 (Finite Element Method). Performance thresholds follow ISO 2631-2 human comfort baseline curves (Reference: Guide 11, Figure 2-1)."
         },
         {
-          title: "Low Frequency Response (fn <= 9 Hz):",
-          body: "Uses a resonant model for walking activity. Formula: ap = FRF_Max * alpha * Q * rho. This incorporates the dynamic coefficient (alpha), step weight (Q), and resonance factor (rho) for damping correction."
+          title: "Resonant Model (fn <= 9 Hz):",
+          body: "Low-frequency floors are analyzed for resonance using the formula: ap = FRF_Max * alpha * Q * rho. This includes the dynamic coefficient (alpha), step weight (Q), and the resonance buildup factor (rho), which is sensitive to damping ratios."
         },
         {
-          title: "High Frequency Response (fn > 9 Hz):",
-          body: "Uses the Effective Peak Acceleration (ESPA) strategy. This determines the floor's peak transient response to individual impulses that occur during repetitive human motion."
+          title: "Impulsive Model (fn > 9 Hz):",
+          body: "High-frequency systems are evaluated using Effective Peak Acceleration (ESPA) principles. This methodology captures the transient response to individual footstep impulses rather than continuous steady-state vibration."
         },
         {
-          title: "Limit Computation:",
-          body: "Thresholds are frequency-dependent. The baseline acceleration (0.005g at 4-8Hz) is interpolated log-linearly across the spectrum and scaled by occupancy-specific multipliers (M=10 for Offices, M=30 for Shopping Malls)."
+          title: "Acceptance Criteria Computation:",
+          body: "The tool calculates limits by performing log-linear interpolation across the frequency spectrum. The base acceleration (0.005g) is scaled by multipliers defined by occupancy: M=10 for Offices/Residential and M=30 for Shopping Malls."
         }
       ];
 
       methodologySections.forEach(section => {
         const bodyLines = doc.splitTextToSize(section.body, contentWidth - 10);
-        const blockHeight = 6 + (bodyLines.length * 5) + 6;
+        // Calculate needed height for this section block (title + lines + spacing)
+        const blockHeight = 6 + (bodyLines.length * 5) + 8;
 
+        // If block doesn't fit, start new page
         if (y + blockHeight > pageHeight - 15) {
           doc.addPage();
           y = 20;
         }
 
         doc.setFont('Helvetica', 'bold');
+        doc.setTextColor(15, 23, 42);
         doc.text(section.title, margin + 5, y);
         y += 6;
 
         doc.setFont('Helvetica', 'normal');
+        doc.setTextColor(51, 65, 85);
         bodyLines.forEach((line: string) => {
           doc.text(line, margin + 10, y);
           y += 5;
         });
-        y += 6; // space between sections
+        y += 4; 
       });
 
-      // Footer
+      // Pagination Footer
       const totalPages = doc.internal.pages.length - 1;
       for (let i = 1; i <= totalPages; i++) {
         doc.setPage(i);
@@ -211,10 +216,10 @@ const App: React.FC = () => {
         doc.text(`Page ${i} of ${totalPages}`, pageWidth - margin, pageHeight - 10, { align: 'right' });
       }
 
-      doc.save(`Vibration_Report_${inputs.checkType.replace(/\s+/g, '_')}.pdf`);
+      doc.save(`Vibration_Report_AISC_G11.pdf`);
     } catch (error) {
-      console.error('PDF Generation Error:', error);
-      alert('Failed to generate PDF. Please try again.');
+      console.error('PDF Error:', error);
+      alert('Failed to generate PDF. Check console for details.');
     } finally {
       setIsGeneratingPDF(false);
     }
