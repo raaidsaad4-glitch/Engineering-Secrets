@@ -1,0 +1,5 @@
+{
+  "name": "Vibration Check Tool – Dynamic Peak Acceleration",
+  "description": "A specialized tool for structural engineers to calculate peak floor acceleration due to human activity (walking, running, rhythmic) based on AISC Steel Design Guide 11, Chapter 7 formulas, featuring acceptability checks and comfort limit visualizations.",
+  "requestFramePermissions": []
+}
