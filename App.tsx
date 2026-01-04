@@ -52,84 +52,105 @@ const App: React.FC = () => {
       const contentWidth = pageWidth - (margin * 2);
       let y = 20;
 
-      // Header
-      doc.setFontSize(18);
+      // 1. Header & Title
+      doc.setFontSize(20);
       doc.setTextColor(15, 23, 42); 
       doc.setFont('Helvetica', 'bold');
-      doc.text('Vibration Check Report', pageWidth / 2, y, { align: 'center' });
-      y += 10;
+      doc.text('Structural Vibration Analysis Report', pageWidth / 2, y, { align: 'center' });
+      y += 8;
       doc.setFontSize(10);
       doc.setFont('Helvetica', 'normal');
       doc.setTextColor(100, 116, 139);
-      doc.text('AISC Design Guide 11 - Dynamic Peak Acceleration Analysis', pageWidth / 2, y, { align: 'center' });
+      doc.text('Performance Evaluation based on AISC Design Guide 11', pageWidth / 2, y, { align: 'center' });
       y += 15;
 
-      // Engineer Info
-      doc.setDrawColor(226, 232, 240);
+      // 2. Project Information Section
+      doc.setDrawColor(203, 213, 225);
       doc.setFillColor(248, 250, 252);
-      doc.rect(margin, y - 5, contentWidth, 20, 'F');
-      doc.setFontSize(11);
-      doc.setTextColor(15, 23, 42);
-      doc.text(`Date: ${new Date().toLocaleDateString()}`, margin + 5, y + 2);
-      doc.text(`Engineer: Eng. Raed Saad Eldin Mohamed`, margin + 5, y + 10);
-      y += 25;
+      doc.rect(margin, y - 5, contentWidth, 22, 'F');
+      doc.rect(margin, y - 5, contentWidth, 22, 'S');
+      doc.setFontSize(10);
+      doc.setFont('Helvetica', 'bold');
+      doc.setTextColor(51, 65, 85);
+      doc.text('REPORT DETAILS', margin + 5, y);
+      y += 6;
+      doc.setFont('Helvetica', 'normal');
+      doc.text(`Date of Issue: ${new Date().toLocaleDateString()}`, margin + 5, y);
+      doc.text(`Project Engineer: Eng. Raed Saad Eldin Mohamed`, margin + 100, y);
+      y += 6;
+      doc.text(`Vibration Case: ${inputs.checkType}`, margin + 5, y);
+      y += 18;
 
-      // 1. Input Section
+      // 3. Input Parameters Table
       doc.setFontSize(12);
       doc.setFont('Helvetica', 'bold');
-      doc.text('1. Input Parameters', margin, y);
-      y += 8;
-      doc.setFontSize(10);
-      doc.setFont('Helvetica', 'normal');
-      const inputData = [
-        ['Parameter', 'Value'],
-        ['Check Type', inputs.checkType],
-        ['Damping Ratio', `${inputs.dampingRatio}%`],
-        ['Design Weight', `${inputs.bodyWeightKg} kg`],
-        ['Low Freq FRF Max', `${inputs.frfMaxLow} %g/lb`],
-        ['Low Freq Dominant', `${inputs.dominantFreqLow} Hz`],
-        ['High Freq FRF Max', `${inputs.frfMaxHigh} %g/lb`],
-        ['High Freq Dominant', `${inputs.dominantFreqHigh} Hz`]
-      ];
+      doc.setTextColor(15, 23, 42);
+      doc.text('1. Design Inputs', margin, y);
+      y += 6;
       
-      inputData.forEach(([label, value]) => {
-        doc.text(label, margin + 5, y);
-        doc.text(value, margin + 80, y);
-        y += 6;
+      doc.setDrawColor(226, 232, 240);
+      const rowHeight = 7;
+      const inputsList = [
+        ['Parameter', 'Value', 'Unit'],
+        ['Damping Ratio (β)', `${inputs.dampingRatio}`, '%'],
+        ['Design Step Weight (Q)', `${inputs.bodyWeightKg}`, 'kg'],
+        ['Low Freq FRF Max', `${inputs.frfMaxLow}`, '%g/lb'],
+        ['Low Freq Dominant Frequency', `${inputs.dominantFreqLow}`, 'Hz'],
+        ['High Freq FRF Max', `${inputs.frfMaxHigh}`, '%g/lb'],
+        ['High Freq Dominant Frequency', `${inputs.dominantFreqHigh}`, 'Hz']
+      ];
+
+      inputsList.forEach((row, i) => {
+        if (i === 0) {
+          doc.setFillColor(241, 245, 249);
+          doc.rect(margin, y - 5, contentWidth, rowHeight, 'F');
+          doc.setFont('Helvetica', 'bold');
+        } else {
+          doc.setFont('Helvetica', 'normal');
+        }
+        doc.text(row[0], margin + 2, y);
+        doc.text(row[1], margin + 80, y);
+        doc.text(row[2], margin + 140, y);
+        doc.line(margin, y + 2, margin + contentWidth, y + 2);
+        y += rowHeight;
       });
       y += 10;
 
-      // 2. Results Section
+      // 4. Performance Summary
       doc.setFontSize(12);
       doc.setFont('Helvetica', 'bold');
-      doc.text('2. Analysis Results', margin, y);
-      y += 8;
-      
-      doc.setFontSize(10);
-      doc.setFont('Helvetica', 'normal');
-      doc.text('Low-Frequency Response:', margin + 5, y);
-      doc.text(`${results.lowFreq.peakAcceleration.toFixed(4)} %g`, margin + 80, y);
-      doc.text(`(Limit: ${results.lowFreq.limit.toFixed(3)} %g)`, margin + 120, y);
+      doc.text('2. Analysis Results & Compliance', margin, y);
       y += 6;
-      doc.text('High-Frequency Response:', margin + 5, y);
-      doc.text(`${results.highFreq.peakAcceleration.toFixed(4)} %g`, margin + 80, y);
-      doc.text(`(Limit: ${results.highFreq.limit.toFixed(3)} %g)`, margin + 120, y);
-      y += 12;
 
-      // Overall Acceptability
-      const isOk = results.lowFreq.isAcceptable && results.highFreq.isAcceptable;
-      doc.setFontSize(14);
-      doc.setFont('Helvetica', 'bold');
-      if (isOk) {
-        doc.setTextColor(16, 185, 129);
-      } else {
-        doc.setTextColor(239, 68, 68);
-      }
-      doc.text(`OVERALL STATUS: ${isOk ? 'PASS' : 'FAIL'}`, pageWidth / 2, y, { align: 'center' });
-      doc.setTextColor(15, 23, 42);
-      y += 12;
+      const resultsList = [
+        ['Check Description', 'Calc. Peak', 'Limit (ISO)', 'Result'],
+        ['Low-Freq Response (Resonant)', `${results.lowFreq.peakAcceleration.toFixed(4)}%g`, `${results.lowFreq.limit.toFixed(3)}%g`, results.lowFreq.isAcceptable ? 'PASS' : 'FAIL'],
+        ['High-Freq Response (Transient)', `${results.highFreq.peakAcceleration.toFixed(4)}%g`, `${results.highFreq.limit.toFixed(3)}%g`, results.highFreq.isAcceptable ? 'PASS' : 'FAIL']
+      ];
 
-      // Chart
+      resultsList.forEach((row, i) => {
+        if (i === 0) {
+          doc.setFillColor(15, 23, 42);
+          doc.setTextColor(255, 255, 255);
+          doc.rect(margin, y - 5, contentWidth, rowHeight, 'F');
+          doc.setFont('Helvetica', 'bold');
+        } else {
+          doc.setTextColor(15, 23, 42);
+          doc.setFont('Helvetica', 'normal');
+          if (row[3] === 'FAIL') doc.setTextColor(220, 38, 38);
+          if (row[3] === 'PASS') doc.setTextColor(21, 128, 61);
+        }
+        doc.text(row[0], margin + 2, y);
+        doc.text(row[1], margin + 80, y);
+        doc.text(row[2], margin + 120, y);
+        doc.text(row[3], margin + 150, y);
+        doc.setTextColor(15, 23, 42);
+        doc.line(margin, y + 2, margin + contentWidth, y + 2);
+        y += rowHeight;
+      });
+      y += 15;
+
+      // 5. Chart Visualization
       const canvas = await html2canvas(chartRef.current, { scale: 2 });
       const imgData = canvas.toDataURL('image/png');
       const imgWidth = contentWidth;
@@ -141,85 +162,62 @@ const App: React.FC = () => {
       }
       
       doc.addImage(imgData, 'PNG', margin, y, imgWidth, imgHeight);
-      y += imgHeight + 20;
+      y += imgHeight + 15;
 
-      // 3. Methodology Section (REVISED for full visibility)
+      // 6. Methodology (Improved for Visibility)
       if (y > pageHeight - 60) {
         doc.addPage();
         y = 20;
       }
 
-      // Title header with background
       doc.setFillColor(241, 245, 249);
       doc.rect(margin, y - 6, contentWidth, 10, 'F');
       doc.setFontSize(12);
       doc.setFont('Helvetica', 'bold');
-      doc.setTextColor(15, 23, 42);
-      doc.text('3. Calculation Methodology & Reference', margin + 5, y + 1);
+      doc.text('3. Engineering Methodology', margin + 5, y + 1);
       y += 12;
       
-      doc.setFontSize(10);
-      doc.setTextColor(51, 65, 85);
-      
-      const methodologySections = [
-        {
-          title: "Regulatory Standards:",
-          body: "Calculations are based on the AISC Steel Design Guide 11, Chapter 7 (Finite Element Method). Performance thresholds follow ISO 2631-2 human comfort baseline curves (Reference: Guide 11, Figure 2-1)."
-        },
-        {
-          title: "Resonant Model (fn <= 9 Hz):",
-          body: "Low-frequency floors are analyzed for resonance using the formula: ap = FRF_Max * alpha * Q * rho. This includes the dynamic coefficient (alpha), step weight (Q), and the resonance buildup factor (rho), which is sensitive to damping ratios."
-        },
-        {
-          title: "Impulsive Model (fn > 9 Hz):",
-          body: "High-frequency systems are evaluated using Effective Peak Acceleration (ESPA) principles. This methodology captures the transient response to individual footstep impulses rather than continuous steady-state vibration."
-        },
-        {
-          title: "Acceptance Criteria Computation:",
-          body: "The tool calculates limits by performing log-linear interpolation across the frequency spectrum. The base acceleration (0.005g) is scaled by multipliers defined by occupancy: M=10 for Offices/Residential and M=30 for Shopping Malls."
-        }
+      doc.setFontSize(9);
+      const methods = [
+        { t: "Standards Applied:", b: "Analysis follows the AISC Steel Design Guide 11, Chapter 7 (Finite Element Method). Performance thresholds are mapped to ISO 2631-2 human comfort baseline curves." },
+        { t: "Frequency Threshold Calculation:", b: "Limits are frequency-dependent. The software performs log-linear interpolation across the spectrum from 1Hz to 80Hz, scaling baseline values by site-specific multipliers (M=10 for Offices, M=30 for Malls)." },
+        { t: "Resonant Peak Response (fn ≤ 9 Hz):", b: "Uses the resonant build-up model: ap = FRF_Max * α * Q * ρ. It accounts for dynamic coefficients (α) and the damping-dependent resonance factor (ρ)." },
+        { t: "Impulsive Peak Response (fn > 9 Hz):", b: "Evaluates the transient decay of individual footsteps using Effective Peak Acceleration (ESPA) strategy for floors dominated by stiffness." }
       ];
 
-      methodologySections.forEach(section => {
-        const bodyLines = doc.splitTextToSize(section.body, contentWidth - 10);
-        // Calculate needed height for this section block (title + lines + spacing)
-        const blockHeight = 6 + (bodyLines.length * 5) + 8;
-
-        // If block doesn't fit, start new page
-        if (y + blockHeight > pageHeight - 15) {
+      methods.forEach(item => {
+        const lines = doc.splitTextToSize(item.b, contentWidth - 10);
+        const height = 6 + (lines.length * 5) + 5;
+        if (y + height > pageHeight - 15) {
           doc.addPage();
           y = 20;
         }
-
         doc.setFont('Helvetica', 'bold');
-        doc.setTextColor(15, 23, 42);
-        doc.text(section.title, margin + 5, y);
-        y += 6;
-
+        doc.text(item.t, margin + 5, y);
+        y += 5;
         doc.setFont('Helvetica', 'normal');
-        doc.setTextColor(51, 65, 85);
-        bodyLines.forEach((line: string) => {
-          doc.text(line, margin + 10, y);
-          y += 5;
+        lines.forEach((l: string) => {
+          doc.text(l, margin + 5, y);
+          y += 4.5;
         });
-        y += 4; 
+        y += 4;
       });
 
-      // Pagination Footer
-      const totalPages = doc.internal.pages.length - 1;
-      for (let i = 1; i <= totalPages; i++) {
+      // 7. Pagination & Footer
+      const pages = doc.internal.pages.length - 1;
+      for (let i = 1; i <= pages; i++) {
         doc.setPage(i);
         doc.setFontSize(8);
-        doc.setFont('Helvetica', 'normal');
         doc.setTextColor(148, 163, 184);
-        doc.text('© 2026 Eng. Raed Saad Eldin Mohamed – Structural Design Engineer. All rights reserved.', pageWidth / 2, pageHeight - 10, { align: 'center' });
-        doc.text(`Page ${i} of ${totalPages}`, pageWidth - margin, pageHeight - 10, { align: 'right' });
+        doc.text('Vibration Check Report – Produced by AISC Design Guide 11 Performance Tool', pageWidth / 2, pageHeight - 15, { align: 'center' });
+        doc.text(`Page ${i} of ${pages}`, pageWidth - margin, pageHeight - 15, { align: 'right' });
+        doc.text('© 2026 Eng. Raed Saad Eldin Mohamed', margin, pageHeight - 15);
       }
 
-      doc.save(`Vibration_Report_AISC_G11.pdf`);
+      doc.save(`Vibration_Analysis_${inputs.checkType.replace(/\s+/g, '_')}.pdf`);
     } catch (error) {
-      console.error('PDF Error:', error);
-      alert('Failed to generate PDF. Check console for details.');
+      console.error('PDF Export Error:', error);
+      alert('Error generating report. Please check browser console.');
     } finally {
       setIsGeneratingPDF(false);
     }
@@ -363,7 +361,7 @@ const App: React.FC = () => {
           <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 flex gap-3 shadow-inner">
             <Info className="w-6 h-6 text-blue-500 shrink-0" />
             <p className="text-xs text-blue-700 leading-relaxed">
-              <strong>Acceptability Status:</strong> Checks use frequency-dependent ISO thresholds (Fig 2-1). The limit adjusts for each case based on the frequency to ensure rigorous compliance.
+              <strong>Acceptability Status:</strong> Checks use frequency-dependent ISO thresholds. The limit adjusts for each case based on the frequency to ensure rigorous compliance.
             </p>
           </div>
         </section>
@@ -434,13 +432,13 @@ const App: React.FC = () => {
               <div>
                 <h4 className="font-bold text-slate-900 mb-2">Low Frequency Floors (fn ≤ 9 Hz)</h4>
                 <p>
-                  For floors where the natural frequency is within the first few harmonics of walking (typically ≤ 9 Hz), the response is dominated by resonance. The peak acceleration is calculated using the established AISC Guide 11 Chapter 7 FEA-based formula <strong>ap = FRF_Max * α * Q * ρ</strong>, where α is the dynamic coefficient and ρ is the resonance build-up factor.
+                  For floors where the natural frequency is within the first few harmonics of walking (typically ≤ 9 Hz), the response is dominated by resonance. The peak acceleration is calculated using the established AISC Guide 11 Chapter 7 FEA-based formula <strong>ap = FRF_Max * α * Q * ρ</strong>.
                 </p>
               </div>
               <div>
                 <h4 className="font-bold text-slate-900 mb-2">High Frequency Floors (fn > 9 Hz)</h4>
                 <p>
-                  Floors with higher stiffness and frequency are sensitive to individual impulses. The response is calculated using an Effective Peak Acceleration (ESPA) strategy adapted for repetitive loading. The methodology determines the peak transient response from individual footsteps, accounting for damping and frequency-specific decay.
+                  Floors with higher stiffness and frequency are sensitive to individual impulses. The response is calculated using an Effective Peak Acceleration (ESPA) strategy adapted for repetitive loading.
                 </p>
               </div>
             </div>
